@@ -1,3 +1,22 @@
+class PaperSize {
+  constructor(widthMm, widthIn, heightMm, heightIn) {
+    this.widthMm = widthMm;
+    this.widthIn = widthIn;
+    this.heightMm = heightMm;
+    this.heightIn = heightIn
+  }
+}
+
+class PrinterOptions {
+  constructor(workDir, fileNames, originalUrl, paperSize, orientation) {
+    this.workDir = workDir;
+    this.fileNames = fileNames;
+    this.originalUrl = originalUrl;
+    this.paperSize = paperSize;
+    this.orientation = orientation
+  }
+}
+
 const express = require('express');
 const Busboy = require('busboy');
 const path = require('path');
@@ -15,7 +34,11 @@ const indexHtml = 'index.' + html;
 const resultPdf = 'result.pdf';
 const wkhtmltopdf = 'wkhtmltopdf';
 const chromium = 'chromium';
-const wkhtmltopdfArgs = ['--enable-local-file-access', indexHtml, resultPdf]
+
+const A4 = new PaperSize('210', '8.5in', '297', '11.71in');
+const A3 = new PaperSize('297', '11.71in', '420', '16.54in');
+const a3 = 'a3';
+const landscape = 'landscape'
 
 const snooze = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -53,7 +76,10 @@ const unknownConverter = (res, printerOptions) => {
 }
 
 const viaWkhtmltopdf = async (res, printerOptions) => {
-  let osCmd = spawn(wkhtmltopdf, wkhtmltopdfArgs, {
+  let osCmd = spawn(wkhtmltopdf, ['--enable-local-file-access', '--print-media-type', '--no-stop-slow-scripts',
+    '--margin-bottom', '0', '--margin-left', '0', '--margin-right', '0', '--margin-top', '0',
+    '--page-width', printerOptions.paperSize.widthMm, '--page-height', printerOptions.paperSize.heightMm, '--orientation', printerOptions.orientation,
+    indexHtml, resultPdf], {
     cwd: printerOptions.workDir
   });
   osCmd.on('close', () => {
@@ -89,7 +115,16 @@ const viaPuppeteer = async (res, printerOptions) => {
   // page.pdf() is currently supported only in headless mode.
   // @see https://bugs.chromium.org/p/chromium/issues/detail?id=753118
   await page.pdf({
-    path: currentPdfFile
+    path: currentPdfFile,
+    width: printerOptions.paperSize.widthIn,
+    height: printerOptions.paperSize.heightIn,
+    landscape: printerOptions.orientation.includes(landscape),
+    margin: {
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0
+    }
   });
   await page.close();
   browserMutex.unlock();
@@ -108,7 +143,13 @@ const launchSuccess = () => console.log(`Chromium (re)started`);
 const launchFailure = (reason) => console.error(`Chromium failed to (re)start ${reason}`)
 
 const htmlToPdf = async (req, res, next) => {
-  let printerOptions = new PrinterOptions(path.join(tmpDir, '' + Math.random() + '-' + Math.random()), [], req.originalUrl);
+  let printerOptions = new PrinterOptions(path.join(tmpDir, '' + Math.random() + '-' + Math.random()), [], req.originalUrl, A4, 'portrait');
+  if (printerOptions.originalUrl.includes(a3)) {
+    printerOptions.paperSize = A3;
+  }
+  if (printerOptions.originalUrl.includes(landscape)) {
+    printerOptions.orientation = landscape
+  }
   mkdirSync(printerOptions.workDir);
   let busboy = new Busboy({
     headers: req.headers
@@ -129,14 +170,6 @@ const htmlToPdf = async (req, res, next) => {
         teapot(res, printerOptions);
       }
     });
-}
-
-class PrinterOptions {
-  constructor(workDir, fileNames, originalUrl) {
-    this.workDir = workDir;
-    this.fileNames = fileNames;
-    this.originalUrl = originalUrl;
-  }
 }
 
 const browserMutex = locks.createMutex();
