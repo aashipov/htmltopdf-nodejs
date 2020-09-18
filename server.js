@@ -25,6 +25,7 @@ const {
   spawn
 } = require('child_process');
 const puppeteer = require('puppeteer');
+const ReadWriteLock = require('rwlock');
 const app = express();
 
 const tmpDir = path.join(__dirname + '/tmp/');
@@ -93,36 +94,37 @@ const viaWkhtmltopdf = async (res, printerOptions) => {
 }
 
 const viaPuppeteer = async (res, printerOptions) => {
-  let browser = await puppeteer.launch(
-    {
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-notifications', '--disable-geolocation', '--disable-infobars',
-        '--disable-session-crashed-bubble', '--disable-dev-shm-usage', '--disable-gpu', '--disable-translate', '--disable-extensions',
-        '--disable-background-networking', '--disable-sync', '--disable-default-apps', '--hide-scrollbars', '--metrics-recording-only',
-        '--mute-audio', '--no-first-run', '--unlimited-storage', '--safebrowsing-disable-auto-update', '--font-render-hinting=none']
-    });
-  const page = await browser.newPage();
-  await page.goto(`file://${path.join(printerOptions.workDir, indexHtml)}`, {
-    waitUntil: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2']
-  });
-  let currentPdfFile = path.join(printerOptions.workDir, resultPdf);
-  // page.pdf() is currently supported only in headless mode.
-  // @see https://bugs.chromium.org/p/chromium/issues/detail?id=753118
-  await page.pdf({
-    path: currentPdfFile,
-    width: printerOptions.paperSize.widthIn,
-    height: printerOptions.paperSize.heightIn,
-    landscape: printerOptions.orientation.includes(landscape),
-    margin: {
-      top: 0,
-      right: 0,
-      bottom: 0,
-      left: 0
+  browserLock.readLock(async (release) => {
+    if (!browser.isConnected()) {
+      await launchBrowser().then(launchSuccess, launchFailure);
     }
-  });
-  await page.close();
-  res.download(currentPdfFile, () => {
-    fs.remove(printerOptions.workDir)
-  });
+    const page = await browser.newPage();
+    await page.goto(`file://${path.join(printerOptions.workDir, indexHtml)}`, {
+      waitUntil: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2']
+    });
+    let currentPdfFile = path.join(printerOptions.workDir, resultPdf);
+    // page.pdf() is currently supported only in headless mode.
+    // @see https://bugs.chromium.org/p/chromium/issues/detail?id=753118
+    await page.pdf({
+      path: currentPdfFile,
+      width: printerOptions.paperSize.widthIn,
+      height: printerOptions.paperSize.heightIn,
+      landscape: printerOptions.orientation.includes(landscape),
+      margin: {
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0
+      }
+    });
+    await page.close();
+    res.download(currentPdfFile, () => {
+      fs.remove(printerOptions.workDir)
+    });
+    setTimeout(function () {
+      release();
+    }, browserTimeout);
+  })
 }
 
 const healthcheck = (req, res, next) => {
@@ -174,7 +176,20 @@ app.route('/' + html)
 app.route('/' + html + '*')
   .post((req, res, next) => htmlToPdf(req, res, next));
 
+const browserLock = new ReadWriteLock();
+const browserTimeout = 30_000;
+let browser;
+const launchBrowser = async () => browser = await puppeteer.launch({
+  args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-notifications', '--disable-geolocation', '--disable-infobars',
+    '--disable-session-crashed-bubble', '--disable-dev-shm-usage', '--disable-gpu', '--disable-translate', '--disable-extensions',
+    '--disable-background-networking', '--disable-sync', '--disable-default-apps', '--hide-scrollbars', '--metrics-recording-only',
+    '--mute-audio', '--no-first-run', '--unlimited-storage', '--safebrowsing-disable-auto-update', '--font-render-hinting=none']
+});
+const launchSuccess = () => console.log(`Chromium (re)started`);
+const launchFailure = (reason) => console.error(`Chromium failed to (re)start ${reason}`)
+
 let server = app.listen(8080, () => {
+  launchBrowser().then(launchSuccess, launchFailure);
   mkdirSync(tmpDir);
   console.log('Listening on port %d', server.address().port);
 });
