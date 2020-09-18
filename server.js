@@ -138,7 +138,7 @@ const healthcheck = (req, res, next) => {
   res.send('{"status":"UP"}');
 }
 
-const launchBrowser = async () => browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+const launchBrowser = async () => browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'] });
 const launchSuccess = () => console.log(`Chromium (re)started`);
 const launchFailure = (reason) => console.error(`Chromium failed to (re)start ${reason}`)
 
