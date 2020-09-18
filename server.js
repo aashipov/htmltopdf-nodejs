@@ -25,7 +25,6 @@ const {
   spawn
 } = require('child_process');
 const puppeteer = require('puppeteer');
-const locks = require('locks');
 const app = express();
 
 const tmpDir = path.join(__dirname + '/tmp/');
@@ -39,8 +38,6 @@ const A4 = new PaperSize('210', '8.5in', '297', '11.71in');
 const A3 = new PaperSize('297', '11.71in', '420', '16.54in');
 const a3 = 'a3';
 const landscape = 'landscape'
-
-const snooze = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const receiveFiles = (file, filename, printerOptions) => {
   printerOptions.fileNames.push(filename);
@@ -96,17 +93,13 @@ const viaWkhtmltopdf = async (res, printerOptions) => {
 }
 
 const viaPuppeteer = async (res, printerOptions) => {
-  if (!browser.isConnected()) {
-    await launchBrowser().then(launchSuccess, launchFailure);
-  }
-  while (true) {
-    if (browserMutex.isLocked) {
-      snooze(10);
-    } else {
-      browserMutex.lock(() => { });
-      break;
-    }
-  }
+  let browser = await puppeteer.launch(
+    {
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-notifications', '--disable-geolocation', '--disable-infobars',
+        '--disable-session-crashed-bubble', '--disable-dev-shm-usage', '--disable-gpu', '--disable-translate', '--disable-extensions',
+        '--disable-background-networking', '--disable-sync', '--disable-default-apps', '--hide-scrollbars', '--metrics-recording-only',
+        '--mute-audio', '--no-first-run', '--unlimited-storage', '--safebrowsing-disable-auto-update', '--font-render-hinting=none']
+    });
   const page = await browser.newPage();
   await page.goto(`file://${path.join(printerOptions.workDir, indexHtml)}`, {
     waitUntil: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2']
@@ -127,7 +120,6 @@ const viaPuppeteer = async (res, printerOptions) => {
     }
   });
   await page.close();
-  browserMutex.unlock();
   res.download(currentPdfFile, () => {
     fs.remove(printerOptions.workDir)
   });
@@ -137,10 +129,6 @@ const healthcheck = (req, res, next) => {
   res.setHeader('content-type', 'application/json; charset=utf-8');
   res.send('{"status":"UP"}');
 }
-
-const launchBrowser = async () => browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'] });
-const launchSuccess = () => console.log(`Chromium (re)started`);
-const launchFailure = (reason) => console.error(`Chromium failed to (re)start ${reason}`)
 
 const htmlToPdf = async (req, res, next) => {
   let printerOptions = new PrinterOptions(path.join(tmpDir, '' + Math.random() + '-' + Math.random()), [], req.originalUrl, A4, 'portrait');
@@ -172,9 +160,6 @@ const htmlToPdf = async (req, res, next) => {
     });
 }
 
-const browserMutex = locks.createMutex();
-let browser;
-
 app.route('/')
   .get((req, res, next) => healthcheck(req, res, next));
 app.route('/health')
@@ -190,7 +175,6 @@ app.route('/' + html + '*')
   .post((req, res, next) => htmlToPdf(req, res, next));
 
 let server = app.listen(8080, () => {
-  launchBrowser().then(launchSuccess, launchFailure);
   mkdirSync(tmpDir);
   console.log('Listening on port %d', server.address().port);
 });
