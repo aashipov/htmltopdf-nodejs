@@ -24,7 +24,7 @@ const fs = require('fs-extra');
 const {
   spawn
 } = require('child_process');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
 const ReadWriteLock = require('rwlock');
 const app = express();
 
@@ -179,7 +179,7 @@ app.route('/' + html + '*')
 const browserLock = new ReadWriteLock();
 const browserTimeout = 30_000;
 let browser;
-const launchBrowser = async () => browser = await puppeteer.launch({
+const launchBrowser = async () => browser = await puppeteer.launch({executablePath: '/usr/bin/chromium',
   args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-notifications', '--disable-geolocation', '--disable-infobars',
     '--disable-session-crashed-bubble', '--disable-dev-shm-usage', '--disable-gpu', '--disable-translate', '--disable-extensions',
     '--disable-background-networking', '--disable-sync', '--disable-default-apps', '--hide-scrollbars', '--metrics-recording-only',

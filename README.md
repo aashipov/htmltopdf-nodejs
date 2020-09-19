@@ -1,3 +1,3 @@
-# htmltopdf-nodejs
+### HTML to PDF ###
 
-Node.js variant of https://github.com/aashipov/htmltopdf
+https://github.com/aashipov/htmltopdf twin, in Node.js
