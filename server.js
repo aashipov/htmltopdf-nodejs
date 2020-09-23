@@ -38,7 +38,20 @@ const chromium = 'chromium';
 const A4 = new PaperSize('210', '8.5in', '297', '11.71in');
 const A3 = new PaperSize('297', '11.71in', '420', '16.54in');
 const a3 = 'a3';
-const landscape = 'landscape'
+const landscape = 'landscape';
+
+const browserLock = new ReadWriteLock();
+const browserTimeout = 30_000;
+let browser;
+
+const launchBrowser = async () => browser = await puppeteer.launch({executablePath: '/usr/bin/chromium',
+  args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-notifications', '--disable-geolocation', '--disable-infobars',
+    '--disable-session-crashed-bubble', '--disable-dev-shm-usage', '--disable-gpu', '--disable-translate', '--disable-extensions',
+    '--disable-background-networking', '--disable-sync', '--disable-default-apps', '--hide-scrollbars', '--metrics-recording-only',
+    '--mute-audio', '--no-first-run', '--unlimited-storage', '--safebrowsing-disable-auto-update', '--font-render-hinting=none']
+});
+const launchSuccess = () => console.log(`Chromium (re)started`);
+const launchFailure = (reason) => console.error(`Chromium failed to (re)start ${reason}`)
 
 const receiveFiles = (file, filename, printerOptions) => {
   printerOptions.fileNames.push(filename);
@@ -121,6 +134,7 @@ const viaPuppeteer = async (res, printerOptions) => {
     res.download(currentPdfFile, () => {
       fs.remove(printerOptions.workDir)
     });
+    release();
     setTimeout(function () {
       release();
     }, browserTimeout);
@@ -175,18 +189,6 @@ app.route('/' + html)
   .post((req, res, next) => htmlToPdf(req, res, next));
 app.route('/' + html + '*')
   .post((req, res, next) => htmlToPdf(req, res, next));
-
-const browserLock = new ReadWriteLock();
-const browserTimeout = 30_000;
-let browser;
-const launchBrowser = async () => browser = await puppeteer.launch({executablePath: '/usr/bin/chromium',
-  args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-notifications', '--disable-geolocation', '--disable-infobars',
-    '--disable-session-crashed-bubble', '--disable-dev-shm-usage', '--disable-gpu', '--disable-translate', '--disable-extensions',
-    '--disable-background-networking', '--disable-sync', '--disable-default-apps', '--hide-scrollbars', '--metrics-recording-only',
-    '--mute-audio', '--no-first-run', '--unlimited-storage', '--safebrowsing-disable-auto-update', '--font-render-hinting=none']
-});
-const launchSuccess = () => console.log(`Chromium (re)started`);
-const launchFailure = (reason) => console.error(`Chromium failed to (re)start ${reason}`)
 
 let server = app.listen(8080, () => {
   launchBrowser().then(launchSuccess, launchFailure);
