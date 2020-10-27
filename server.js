@@ -6,12 +6,16 @@ class PaperSize {
 }
 
 class PrinterOptions {
-  constructor(workDir, fileNames, originalUrl, paperSize, orientation) {
+  constructor(workDir, fileNames, originalUrl, paperSize, orientation, left, right, top, bottom) {
     this.workDir = workDir;
     this.fileNames = fileNames;
     this.originalUrl = originalUrl;
     this.paperSize = paperSize;
-    this.orientation = orientation
+    this.orientation = orientation;
+    this.left = left;
+    this.right = right;
+    this.top = top;
+    this.bottom = bottom;
   }
 }
 
@@ -38,10 +42,27 @@ const A3 = new PaperSize('297', '420');
 const a3 = 'a3';
 const mm = 'mm';
 const landscape = 'landscape';
+const defaultMargin = '20'
+const left = 'left';
+const right = 'right';
+const top = 'top';
+const bottom = 'bottom';
+const oneOrMoreDigitsRe = new RegExp(/\d+/);
+
+const fillMarginNameReMap = () => {
+  let m = new Map();
+  m.set(left, new RegExp(/left\d+/));
+  m.set(right, new RegExp(/right\d+/));
+  m.set(top, new RegExp(/top\d+/));
+  m.set(bottom, new RegExp(/bottom\d+/));
+  return m;
+}
+const marginNameReMap = fillMarginNameReMap();
 
 const browserLock = new ReadWriteLock();
 const browserTimeout = 30_000;
 let browser;
+
 
 const launchBrowser = async () => browser = await puppeteer.launch({executablePath: '/usr/bin/chromium',
   args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-notifications', '--disable-geolocation', '--disable-infobars',
@@ -87,7 +108,7 @@ const unknownConverter = (res, printerOptions) => {
 
 const viaWkhtmltopdf = async (res, printerOptions) => {
   let osCmd = spawn(wkhtmltopdf, ['--enable-local-file-access', '--print-media-type', '--no-stop-slow-scripts',
-    '--margin-bottom', '0', '--margin-left', '0', '--margin-right', '0', '--margin-top', '0',
+    '--margin-bottom', printerOptions.bottom, '--margin-left', printerOptions.left, '--margin-right', printerOptions.right, '--margin-top', printerOptions.top,
     '--page-width', printerOptions.paperSize.widthMm, '--page-height', printerOptions.paperSize.heightMm, '--orientation', printerOptions.orientation,
     indexHtml, resultPdf], {
     cwd: printerOptions.workDir
@@ -123,10 +144,10 @@ const viaPuppeteer = async (res, printerOptions) => {
       height: printerOptions.paperSize.heightMm + mm,
       landscape: printerOptions.orientation.includes(landscape),
       margin: {
-        top: 0,
-        right: 0,
-        bottom: 0,
-        left: 0
+        top: printerOptions.top,
+        right: printerOptions.right,
+        bottom: printerOptions.bottom,
+        left: printerOptions.left
       }
     });
     await page.close();
@@ -146,12 +167,30 @@ const healthcheck = (req, res, next) => {
 }
 
 const htmlToPdf = async (req, res, next) => {
-  let printerOptions = new PrinterOptions(path.join(tmpDir, '' + Math.random() + '-' + Math.random()), [], req.originalUrl, A4, 'portrait');
+  let printerOptions = new PrinterOptions(path.join(tmpDir, '' + Math.random() + '-' + Math.random()), [], req.originalUrl, A4, 'portrait', defaultMargin, defaultMargin, defaultMargin, defaultMargin);
   if (printerOptions.originalUrl.includes(a3)) {
     printerOptions.paperSize = A3;
   }
   if (printerOptions.originalUrl.includes(landscape)) {
     printerOptions.orientation = landscape
+  }
+  for (let [marginName, re] of marginNameReMap.entries()) {
+    let marginNameWithDigits = printerOptions.originalUrl.match(re);
+    if (null != marginNameWithDigits) {
+      let marginDigits = marginNameWithDigits[0].match(oneOrMoreDigitsRe)[0];
+      if (left == marginName) {
+        printerOptions.left = marginDigits;
+      }
+      if (right == marginName) {
+        printerOptions.right = marginDigits;
+      }
+      if (top == marginName) {
+        printerOptions.top = marginDigits;
+      }
+      if (bottom == marginName) {
+        printerOptions.bottom = marginDigits;
+      }
+    }
   }
   mkdirSync(printerOptions.workDir);
   let busboy = new Busboy({
