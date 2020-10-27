@@ -1,9 +1,7 @@
 class PaperSize {
-  constructor(widthMm, widthIn, heightMm, heightIn) {
+  constructor(widthMm, heightMm) {
     this.widthMm = widthMm;
-    this.widthIn = widthIn;
     this.heightMm = heightMm;
-    this.heightIn = heightIn
   }
 }
 
@@ -35,9 +33,10 @@ const resultPdf = 'result.pdf';
 const wkhtmltopdf = 'wkhtmltopdf';
 const chromium = 'chromium';
 
-const A4 = new PaperSize('210', '8.5in', '297', '11.71in');
-const A3 = new PaperSize('297', '11.71in', '420', '16.54in');
+const A4 = new PaperSize('210', '297');
+const A3 = new PaperSize('297', '420');
 const a3 = 'a3';
+const mm = 'mm';
 const landscape = 'landscape';
 
 const browserLock = new ReadWriteLock();
@@ -120,8 +119,8 @@ const viaPuppeteer = async (res, printerOptions) => {
     // @see https://bugs.chromium.org/p/chromium/issues/detail?id=753118
     await page.pdf({
       path: currentPdfFile,
-      width: printerOptions.paperSize.widthIn,
-      height: printerOptions.paperSize.heightIn,
+      width: printerOptions.paperSize.widthMm + mm,
+      height: printerOptions.paperSize.heightMm + mm,
       landscape: printerOptions.orientation.includes(landscape),
       margin: {
         top: 0,
