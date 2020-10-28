@@ -60,7 +60,7 @@ const fillMarginNameReMap = () => {
 const marginNameReMap = fillMarginNameReMap();
 
 const browserLock = new ReadWriteLock();
-const browserTimeout = 30_000;
+const browserTimeout = 30000;
 let browser;
 
 
