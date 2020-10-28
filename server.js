@@ -144,10 +144,10 @@ const viaPuppeteer = async (res, printerOptions) => {
       height: printerOptions.paperSize.heightMm + mm,
       landscape: printerOptions.orientation.includes(landscape),
       margin: {
-        top: printerOptions.top,
-        right: printerOptions.right,
-        bottom: printerOptions.bottom,
-        left: printerOptions.left
+        top: printerOptions.top + mm,
+        right: printerOptions.right + mm,
+        bottom: printerOptions.bottom + mm,
+        left: printerOptions.left + mm
       }
     });
     await page.close();
