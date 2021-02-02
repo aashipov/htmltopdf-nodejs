@@ -9,7 +9,7 @@ THIS_DIR=$(pwd)
 NODE_1=htmltopdf-nodejs1
 NODE_2=htmltopdf-nodejs2
 NODE_3=htmltopdf-nodejs3
-HAPROXY=haproxy-nodejs
+HAPROXY=htmltopdf-nodejs-haproxy
 NETWORK_NAME=htmltopdf-nodejs
 VOLUMES_HAPROXY="-v /${THIS_DIR}/haproxy/:/usr/local/etc/haproxy/:ro"
 
