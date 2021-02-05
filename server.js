@@ -1,15 +1,16 @@
 import http from 'http';
-import { chromium, healthCheck, html, htmlToPdf, setUp, slash } from './common.js';
+import { chromium, healthCheck, html, htmlToPdf, setUp, slash, healthUrl } from './common.js';
+
+const defaultPort = 8080;
 
 http.createServer((request, response) => {
   const { url } = request;
-  if (slash === url || slash + 'health' === url) {
+  if (url.includes(chromium) || url.includes(html)) {
+    htmlToPdf(request, response);
+  } else {
     healthCheck(response);
   }
-  if (url.startsWith(slash + chromium) || url.startsWith(slash + html)) {
-    htmlToPdf(request, response);
-  }
 }
-).listen(8080)
+).listen(defaultPort);
 
 setUp();

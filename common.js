@@ -8,6 +8,7 @@ import { PaperSize } from './papersize.js';
 import { lauchChromiumHeadless, viaPuppeteer } from './chromium.js'
 
 export const slash = '/';
+export const healthUrl = slash + 'health';
 export const html = 'html';
 export const indexHtml = 'index.' + html;
 export const resultPdf = 'result.pdf';
@@ -24,8 +25,7 @@ const applicationPdf = 'application/pdf';
 const applicationJsonUtf8 = 'application/json;charset=utf-8';
 const statusUp = '{"status":"UP"}';
 const tmp = 'tmp';
-const noIndexHtml = 'No ' + indexHtml;
-const unknownConverterText = 'Unknown converter';
+const noIndexHtml = 'No ' + indexHtml + ' or URL does not contain words html or chromium';
 
 export const http500 = 500;
 const http418 = 418;
@@ -77,13 +77,6 @@ const mkdirSync = (dir) => {
 const teapot = (res, printerOptions) => {
     res.statusCode = http418;
     res.write(noIndexHtml);
-    fs.remove(printerOptions.workDir);
-    res.end();
-}
-
-const unknownConverter = (res, printerOptions) => {
-    res.statusCode = http500;
-    res.write(unknownConverterText);
     fs.remove(printerOptions.workDir);
     res.end();
 }
@@ -146,8 +139,6 @@ export const htmlToPdf = async (req, res) => {
                     viaPuppeteer(res, printerOptions);
                 } else if (printerOptions.originalUrl.includes(html)) {
                     viaWkhtmltopdf(res, printerOptions);
-                } else {
-                    unknownConverter(res, printerOptions);
                 }
             } else {
                 teapot(res, printerOptions);
