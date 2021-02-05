@@ -27,7 +27,7 @@ export const lauchChromiumHeadless = async () => {
 export const viaPuppeteer = async (res, printerOptions) => {
     browserLock.readLock(async (release) => {
         if (!browser.isConnected()) {
-            startChromium();
+            lauchChromiumHeadless();
         }
         const page = await browser.newPage();
         await page.goto(`file://${path.join(printerOptions.workDir, indexHtml)}`, {
