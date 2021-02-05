@@ -15,10 +15,10 @@ export const wkhtmltopdf = 'wkhtmltopdf';
 export const landscape = 'landscape';
 
 const portrait = 'portrait';
-const file = 'file';
-const finish = 'finish';
+const fileEvt = 'file';
+const finishEvt = 'finish';
 const contentType = 'Content-Type';
-const contentLenght = 'Content-Length';
+const contentLenghtHeader = 'Content-Length';
 const applicationPdf = 'application/pdf';
 const applicationJsonUtf8 = 'application/json;charset=utf-8';
 const statusUp = '{"status":"UP"}';
@@ -130,8 +130,8 @@ export const htmlToPdf = async (req, res) => {
     });
     req.pipe(busboy);
     busboy
-        .on(file, (fieldname, file, filename) => receiveFiles(file, filename, printerOptions))
-        .on(finish, () => {
+        .on(fileEvt, (fieldname, file, filename) => receiveFiles(file, filename, printerOptions))
+        .on(finishEvt, () => {
             if (isIndexHtml(printerOptions.fileNames)) {
                 if (printerOptions.originalUrl.includes(chromium)) {
                     viaPuppeteer(res, printerOptions);
@@ -154,7 +154,7 @@ export const sendPdf = (response, currentPdfFile) => {
         http200,
         {
             contentType: applicationPdf,
-            contentLenght: fs.statSync(currentPdfFile).size
+            contentLenghtHeader: fs.statSync(currentPdfFile).size
         }
     );
     fs.createReadStream(currentPdfFile).pipe(response);
