@@ -2,6 +2,7 @@
   "name": "nodejs-html-to-pdf",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "busboy": "^0.3.1",
     "child_process": "^1.0.2",
