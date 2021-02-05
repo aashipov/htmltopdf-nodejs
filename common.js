@@ -7,8 +7,6 @@ import { PrinterOptions } from './printeroptions.js';
 import { PaperSize } from './papersize.js';
 import { lauchChromiumHeadless, viaPuppeteer } from './chromium.js'
 
-export const slash = '/';
-export const healthUrl = slash + 'health';
 export const html = 'html';
 export const indexHtml = 'index.' + html;
 export const resultPdf = 'result.pdf';

@@ -1,5 +1,5 @@
 import http from 'http';
-import { chromium, healthCheck, html, htmlToPdf, setUp, slash, healthUrl } from './common.js';
+import { chromium, healthCheck, html, htmlToPdf, setUp } from './common.js';
 
 const defaultPort = 8080;
 
