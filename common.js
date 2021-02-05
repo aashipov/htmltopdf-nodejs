@@ -158,4 +158,5 @@ export const sendPdf = (response, currentPdfFile) => {
         }
     );
     fs.createReadStream(currentPdfFile).pipe(response);
+    // no response.end(); to send PDF properly
 }
