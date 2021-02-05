@@ -23,7 +23,7 @@ const applicationPdf = 'application/pdf';
 const applicationJsonUtf8 = 'application/json;charset=utf-8';
 const statusUp = '{"status":"UP"}';
 const tmp = 'tmp';
-const noIndexHtml = 'No ' + indexHtml + ' or URL does not contain words html or chromium';
+const noIndexHtml = 'No ' + indexHtml + ' or URL does not contain words like html or chromium';
 
 export const http500 = 500;
 const http418 = 418;
