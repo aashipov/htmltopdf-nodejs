@@ -27,7 +27,8 @@ const tmp = 'tmp';
 const noIndexHtml = 'No ' + indexHtml;
 const unknownConverterText = 'Unknown converter';
 
-const http500 = 500;
+export const http500 = 500;
+const http418 = 418;
 const http200 = 200;
 
 const A4 = new PaperSize('210', '297');
@@ -74,7 +75,7 @@ const mkdirSync = (dir) => {
 }
 
 const teapot = (res, printerOptions) => {
-    res.statusCode = 418;
+    res.statusCode = http418;
     res.write(noIndexHtml);
     fs.remove(printerOptions.workDir);
     res.end();
@@ -160,10 +161,12 @@ export const setUp = () => {
 }
 
 export const sendPdf = (response, currentPdfFile) => {
-    response.writeHead(200, {
-        contentType: applicationPdf,
-        contentLenght: fs.statSync(currentPdfFile).size
-    });
-    let readStream = fs.createReadStream(currentPdfFile);
-    readStream.pipe(response);
+    response.writeHead(
+        http200,
+        {
+            contentType: applicationPdf,
+            contentLenght: fs.statSync(currentPdfFile).size
+        }
+    );
+    fs.createReadStream(currentPdfFile).pipe(response);
 }

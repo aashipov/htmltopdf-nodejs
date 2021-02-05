@@ -7,6 +7,7 @@ import { indexHtml, landscape, resultPdf, sendPdf } from './common.js';
 const mm = 'mm';
 const browserLock = new ReadWriteLock();
 const browserTimeout = 30000;
+const defaultEvents = ['load', 'domcontentloaded', 'networkidle0', 'networkidle2'];
 let browser;
 
 const launchSuccess = () => console.log(`Chromium (re)started`);
@@ -23,14 +24,16 @@ export const lauchChromiumHeadless = async () => {
     await launchBrowser().then(launchSuccess, launchFailure);
 }
 
+const buildFileUrl = (workDir) => (`file://${path.join(workDir, indexHtml)}`);
+
 export const viaPuppeteer = async (res, printerOptions) => {
     browserLock.readLock(async (release) => {
         if (!browser.isConnected()) {
             lauchChromiumHeadless();
         }
         const page = await browser.newPage();
-        await page.goto(`file://${path.join(printerOptions.workDir, indexHtml)}`, {
-            waitUntil: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2']
+        await page.goto(buildFileUrl(printerOptions.workDir), {
+            waitUntil: defaultEvents
         });
         let currentPdfFile = path.join(printerOptions.workDir, resultPdf);
         // page.pdf() is currently supported only in headless mode.
