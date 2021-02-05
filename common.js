@@ -7,6 +7,7 @@ import { PrinterOptions } from './printeroptions.js';
 import { PaperSize } from './papersize.js';
 import { lauchChromiumHeadless, viaPuppeteer } from './chromium.js'
 
+export const slash = '/';
 export const html = 'html';
 export const indexHtml = 'index.' + html;
 export const resultPdf = 'result.pdf';
@@ -48,7 +49,7 @@ const isIndexHtml = (fileNames) => {
             return true;
         }
     }
-    return false
+    return false;
 }
 
 const mkdirSync = (dir) => {
@@ -58,24 +59,28 @@ const mkdirSync = (dir) => {
 }
 
 const teapot = (res, printerOptions) => {
-    res.status(418)
-    res.send('No index.html');
+    res.statusCode = 418;
+    res.write('No index.html');
     fs.remove(printerOptions.workDir);
+    res.end();
 }
 
 const unknownConverter = (res, printerOptions) => {
-    res.status(500);
-    res.send('Unknown converter');
+    res.statusCode = 500;
+    res.write('Unknown converter');
     fs.remove(printerOptions.workDir);
+    res.end();
 }
 
-export const healthcheck = (req, res, next) => {
-    res.setHeader('content-type', 'application/json; charset=utf-8');
-    res.send('{"status":"UP"}');
+export const healthCheck = (res) => {
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.write('{"status":"UP"}');
+    res.end();
 }
 
-export const htmlToPdf = async (req, res, next) => {
-    let printerOptions = new PrinterOptions(path.join(tmpDir, '' + Math.random() + '-' + Math.random()), [], req.originalUrl, A4, 'portrait', defaultMargin, defaultMargin, defaultMargin, defaultMargin);
+export const htmlToPdf = async (req, res) => {
+    let printerOptions = new PrinterOptions(path.join(tmpDir, '' + Math.random() + '-' + Math.random()), [], req.url, A4, 'portrait', defaultMargin, defaultMargin, defaultMargin, defaultMargin);
     if (printerOptions.originalUrl.includes(a3)) {
         printerOptions.paperSize = A3;
     }
@@ -125,4 +130,13 @@ export const htmlToPdf = async (req, res, next) => {
 export const setUp = () => {
     mkdirSync(tmpDir);
     lauchChromiumHeadless();
+}
+
+export const sendPdf = (response, currentPdfFile) => {
+    response.writeHead(200, {
+        'Content-Type': 'application/pdf',
+        'Content-Length': fs.statSync(currentPdfFile).size
+    });
+    let readStream = fs.createReadStream(currentPdfFile);
+    readStream.pipe(response);
 }

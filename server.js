@@ -1,25 +1,15 @@
-import express from 'express';
+import http from 'http';
+import { chromium, healthCheck, html, htmlToPdf, setUp, slash } from './common.js';
 
-import { chromium, healthcheck, html, htmlToPdf, setUp } from './common.js';
+http.createServer((request, response) => {
+  const { url } = request;
+  if (slash === url || slash + 'health' === url) {
+    healthCheck(response);
+  }
+  if (url.startsWith(slash + chromium) || url.startsWith(slash + html)) {
+    htmlToPdf(request, response);
+  }
+}
+).listen(8080)
 
-const app = express();
-
-
-app.route('/')
-  .get((req, res, next) => healthcheck(req, res, next));
-app.route('/health')
-  .get((req, res, next) => healthcheck(req, res, next));
-
-app.route('/' + chromium)
-  .post((req, res, next) => htmlToPdf(req, res, next));
-app.route('/' + chromium + '*')
-  .post((req, res, next) => htmlToPdf(req, res, next));
-app.route('/' + html)
-  .post((req, res, next) => htmlToPdf(req, res, next));
-app.route('/' + html + '*')
-  .post((req, res, next) => htmlToPdf(req, res, next));
-
-let server = app.listen(8080, () => {
-  setUp();
-  console.log('Listening on port %d', server.address().port);
-});
+setUp();

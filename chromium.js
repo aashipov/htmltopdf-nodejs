@@ -2,7 +2,7 @@ import puppeteer from 'puppeteer-core';
 import ReadWriteLock from 'rwlock';
 import path from 'path';
 import fs from 'fs-extra';
-import { indexHtml, landscape, resultPdf } from './common.js';
+import { indexHtml, landscape, resultPdf, sendPdf } from './common.js';
 
 const mm = 'mm';
 const browserLock = new ReadWriteLock();
@@ -48,9 +48,8 @@ export const viaPuppeteer = async (res, printerOptions) => {
             }
         });
         await page.close();
-        res.download(currentPdfFile, () => {
-            fs.remove(printerOptions.workDir)
-        });
+        sendPdf(res, currentPdfFile);
+        fs.remove(printerOptions.workDir);
         release();
         setTimeout(function () {
             release();
