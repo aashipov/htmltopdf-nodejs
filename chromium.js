@@ -2,8 +2,7 @@ import puppeteer from 'puppeteer-core';
 import ReadWriteLock from 'rwlock';
 import path from 'path';
 import fs from 'fs-extra';
-import { landscape } from './common.js';
-import { indexHtml, resultPdf } from './common.js';
+import { indexHtml, landscape, resultPdf } from './common.js';
 
 const mm = 'mm';
 const browserLock = new ReadWriteLock();

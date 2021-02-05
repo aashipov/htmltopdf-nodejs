@@ -1,7 +1,7 @@
-import { spawn } from 'child_process';
-import {wkhtmltopdf, indexHtml, resultPdf} from './common.js';
 import path from 'path';
 import fs from 'fs-extra';
+import { spawn } from 'child_process';
+import {wkhtmltopdf, indexHtml, resultPdf} from './common.js';
 
 export const viaWkhtmltopdf = async (res, printerOptions) => {
     let osCmd = spawn(wkhtmltopdf, ['--enable-local-file-access', '--print-media-type', '--no-stop-slow-scripts', '--disable-smart-shrinking',
