@@ -1,8 +1,7 @@
 import puppeteer from 'puppeteer-core';
 import ReadWriteLock from 'rwlock';
 import path from 'path';
-import fs from 'fs-extra';
-import { indexHtml, landscape, resultPdf, sendPdf } from './common.js';
+import {buildCurrentPdfFilePath, indexHtml, landscape, removeWorkDir, sendPdf} from './common.js';
 
 const mm = 'mm';
 const browserLock = new ReadWriteLock();
@@ -28,7 +27,6 @@ export const lauchChromiumHeadless = async () => {
 }
 
 const buildFileUrl = (workDir) => `file://${path.join(workDir, indexHtml)}`;
-const buildCurrentPdfFilePath = (printerOptions) => path.join(printerOptions.workDir, resultPdf);
 const buildPdfOpts = (printerOptions) => (
     {
         path: buildCurrentPdfFilePath(printerOptions),
@@ -57,8 +55,8 @@ export const viaPuppeteer = async (res, printerOptions) => {
         // @see https://bugs.chromium.org/p/chromium/issues/detail?id=753118
         await page.pdf(buildPdfOpts(printerOptions));
         await page.close();
-        sendPdf(res, buildCurrentPdfFilePath(printerOptions));
-        fs.remove(printerOptions.workDir);
+        sendPdf(res, printerOptions);
+        removeWorkDir(printerOptions);
         release();
         setTimeout(function () {
             release();

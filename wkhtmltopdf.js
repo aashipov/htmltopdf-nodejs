@@ -1,7 +1,5 @@
-import path from 'path';
-import fs from 'fs-extra';
 import { spawn } from 'child_process';
-import { wkhtmltopdf, indexHtml, resultPdf, sendPdf, http500 } from './common.js';
+import {wkhtmltopdf, indexHtml, resultPdf, sendPdf, http500, removeWorkDir} from './common.js';
 
 const closeEvt = 'close';
 const errorEvt = 'error';
@@ -15,15 +13,15 @@ const buildSpawnOptions = (printerOptions) => (['--enable-local-file-access', '-
 export const viaWkhtmltopdf = async (res, printerOptions) => {
     let osCmd = spawn(wkhtmltopdf, buildSpawnOptions(printerOptions), { cwd: printerOptions.workDir });
     osCmd.on(closeEvt, () => {
-        sendPdf(res, path.join(printerOptions.workDir, resultPdf));
-        fs.remove(printerOptions.workDir);
+        sendPdf(res, printerOptions);
+        removeWorkDir(printerOptions);
     });
     osCmd.on(errorEvt, (error) => {
         const msg = `${errorCallingWkhtmltopdf} ${error}`;
         console.log(msg);
         res.statusCode = http500;
         res.write(msg);
-        fs.remove(printerOptions.workDir);
+        removeWorkDir(printerOptions);
         res.end();
     });
 }

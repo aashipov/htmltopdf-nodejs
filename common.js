@@ -2,10 +2,9 @@ import Busboy from 'busboy';
 import path from 'path';
 import fs from 'fs-extra';
 
-import { viaWkhtmltopdf } from './wkhtmltopdf.js';
-import { PrinterOptions } from './printeroptions.js';
-import { PaperSize } from './papersize.js';
-import { lauchChromiumHeadless, viaPuppeteer } from './chromium.js'
+import {viaWkhtmltopdf} from './wkhtmltopdf.js';
+import {buildPrinterOptions} from './printeroptions.js';
+import {viaPuppeteer} from './chromium.js'
 
 export const html = 'html';
 export const indexHtml = 'index.' + html;
@@ -14,7 +13,6 @@ export const chromium = 'chromium';
 export const wkhtmltopdf = 'wkhtmltopdf';
 export const landscape = 'landscape';
 
-const portrait = 'portrait';
 const fileEvt = 'file';
 const finishEvt = 'finish';
 const contentType = 'Content-Type';
@@ -29,33 +27,13 @@ export const http500 = 500;
 const http418 = 418;
 const http200 = 200;
 
-const A4 = new PaperSize('210', '297');
-const A3 = new PaperSize('297', '420');
-const a3 = 'a3';
-const defaultMargin = '20'
-const left = 'left';
-const right = 'right';
-const top = 'top';
-const bottom = 'bottom';
-const oneOrMoreDigitsRe = new RegExp(/\d+/);
-
-const tmpDir = path.join(path.resolve(), tmp);
-
-const fillMarginNameReMap = () => {
-    let m = new Map();
-    m.set(left, new RegExp(/left\d+/));
-    m.set(right, new RegExp(/right\d+/));
-    m.set(top, new RegExp(/top\d+/));
-    m.set(bottom, new RegExp(/bottom\d+/));
-    return m;
-}
-const marginNameReMap = fillMarginNameReMap();
+export const tmpDir = path.join(path.resolve(), tmp);
 
 const receiveFiles = (file, filename, printerOptions) => {
     printerOptions.fileNames.push(filename);
     let fstream = fs.createWriteStream(path.join(printerOptions.workDir, filename));
     file.pipe(fstream);
-}
+};
 
 const isIndexHtml = (fileNames) => {
     for (let i = 0; i < fileNames.length; i++) {
@@ -64,63 +42,27 @@ const isIndexHtml = (fileNames) => {
         }
     }
     return false;
-}
+};
 
 const mkdirSync = (dir) => {
     if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir);
     }
-}
+};
 
 const teapot = (res, printerOptions) => {
     res.statusCode = http418;
     res.write(noIndexHtml);
-    fs.remove(printerOptions.workDir);
+    removeWorkDir(printerOptions);
     res.end();
-}
+};
 
 export const healthCheck = (res) => {
     res.statusCode = http200;
     res.setHeader(contentType, applicationJsonUtf8);
     res.write(statusUp);
     res.end();
-}
-
-const buildPrinterOptions = (req) => {
-    let printerOptions =
-        new PrinterOptions(
-            path.join(tmpDir, '' + Math.random() + '-' + Math.random()),
-            [],
-            req.url,
-            A4,
-            portrait,
-            defaultMargin, defaultMargin, defaultMargin, defaultMargin);
-    if (printerOptions.originalUrl.includes(a3)) {
-        printerOptions.paperSize = A3;
-    }
-    if (printerOptions.originalUrl.includes(landscape)) {
-        printerOptions.orientation = landscape
-    }
-    for (let [marginName, re] of marginNameReMap.entries()) {
-        let marginNameWithDigits = printerOptions.originalUrl.match(re);
-        if (null != marginNameWithDigits) {
-            let marginDigits = marginNameWithDigits[0].match(oneOrMoreDigitsRe)[0];
-            if (left == marginName) {
-                printerOptions.left = marginDigits;
-            }
-            if (right == marginName) {
-                printerOptions.right = marginDigits;
-            }
-            if (top == marginName) {
-                printerOptions.top = marginDigits;
-            }
-            if (bottom == marginName) {
-                printerOptions.bottom = marginDigits;
-            }
-        }
-    }
-    return printerOptions;
-}
+};
 
 export const htmlToPdf = async (req, res) => {
     let printerOptions = buildPrinterOptions(req);
@@ -142,14 +84,14 @@ export const htmlToPdf = async (req, res) => {
                 teapot(res, printerOptions);
             }
         });
-}
+};
 
-export const setUp = () => {
-    mkdirSync(tmpDir);
-    lauchChromiumHeadless();
-}
+export const createTmpDir = (tmpDir) => mkdirSync(tmpDir);
 
-export const sendPdf = (response, currentPdfFile) => {
+export const removeWorkDir = (printerOptions) => fs.remove(printerOptions.workDir);
+
+export const sendPdf = (response, printerOptions) => {
+    let currentPdfFile = buildCurrentPdfFilePath(printerOptions);
     response.writeHead(
         http200,
         {
@@ -159,4 +101,5 @@ export const sendPdf = (response, currentPdfFile) => {
     );
     fs.createReadStream(currentPdfFile).pipe(response);
     // no response.end(); to send PDF properly
-}
+};
+export const buildCurrentPdfFilePath = (printerOptions) => path.join(printerOptions.workDir, resultPdf);

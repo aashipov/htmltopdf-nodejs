@@ -1,5 +1,6 @@
 import http from 'http';
-import { chromium, healthCheck, html, htmlToPdf, setUp } from './common.js';
+import {chromium, createTmpDir, healthCheck, html, htmlToPdf, tmpDir} from './common.js';
+import {lauchChromiumHeadless} from './chromium.js';
 
 const defaultPort = 8080;
 
@@ -13,4 +14,5 @@ http.createServer((request, response) => {
 }
 ).listen(defaultPort);
 
-setUp();
+createTmpDir(tmpDir);
+lauchChromiumHeadless();
