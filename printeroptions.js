@@ -1,5 +1,12 @@
+import fs from 'fs-extra';
 import path from 'path';
-import {landscape, tmpDir} from './common.js';
+
+import {resultPdf} from './handler.js';
+
+const leftMarginName = 'left';
+const rightMarginName = 'right';
+const topMarginName = 'top';
+const bottomMarginName = 'bottom';
 
 export class PrinterOptions {
     constructor(workDir, fileNames, originalUrl, paperSize, orientation, left, right, top, bottom) {
@@ -26,29 +33,38 @@ const A4 = new PaperSize('210', '297');
 const A3 = new PaperSize('297', '420');
 const a3 = 'a3';
 const defaultMargin = '20'
-const left = 'left';
-const right = 'right';
-const top = 'top';
-const bottom = 'bottom';
 const portrait = 'portrait';
+export const landscape = 'landscape';
 
 const oneOrMoreDigitsRe = new RegExp(/\d+/);
-
 const fillMarginNameReMap = () => {
     let m = new Map();
-    m.set(left, new RegExp(/left\d+/));
-    m.set(right, new RegExp(/right\d+/));
-    m.set(top, new RegExp(/top\d+/));
-    m.set(bottom, new RegExp(/bottom\d+/));
+    m.set(leftMarginName, new RegExp(/left\d+/));
+    m.set(rightMarginName, new RegExp(/right\d+/));
+    m.set(topMarginName, new RegExp(/top\d+/));
+    m.set(bottomMarginName, new RegExp(/bottom\d+/));
     return m;
 };
-
 const marginNameReMap = fillMarginNameReMap();
 
+const mkdirSync = (dir) => {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir);
+    }
+};
+
+const tmpDir = path.join(path.resolve(), 'tmp');
+export const createTmpDir = () => mkdirSync(tmpDir);
+
+export const removeWorkDir = (printerOptions) => fs.remove(printerOptions.workDir);
+export const buildCurrentPdfFilePath = (printerOptions) => path.join(printerOptions.workDir, resultPdf);
+
 export const buildPrinterOptions = (req) => {
+    const workDir = path.join(tmpDir, '' + Math.random() + '-' + Math.random());
+    mkdirSync(workDir);
     let printerOptions =
         new PrinterOptions(
-            path.join(tmpDir, '' + Math.random() + '-' + Math.random()),
+            workDir,
             [],
             req.url,
             A4,
@@ -64,16 +80,16 @@ export const buildPrinterOptions = (req) => {
         let marginNameWithDigits = printerOptions.originalUrl.match(re);
         if (null != marginNameWithDigits) {
             let marginDigits = marginNameWithDigits[0].match(oneOrMoreDigitsRe)[0];
-            if (left === marginName) {
+            if (leftMarginName === marginName) {
                 printerOptions.left = marginDigits;
             }
-            if (right === marginName) {
+            if (rightMarginName === marginName) {
                 printerOptions.right = marginDigits;
             }
-            if (top === marginName) {
+            if (topMarginName === marginName) {
                 printerOptions.top = marginDigits;
             }
-            if (bottom === marginName) {
+            if (bottomMarginName === marginName) {
                 printerOptions.bottom = marginDigits;
             }
         }

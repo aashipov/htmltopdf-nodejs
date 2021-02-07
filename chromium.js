@@ -1,7 +1,9 @@
 import puppeteer from 'puppeteer-core';
 import ReadWriteLock from 'rwlock';
 import path from 'path';
-import {buildCurrentPdfFilePath, indexHtml, landscape, removeWorkDir, sendPdf} from './common.js';
+
+import {indexHtml, sendPdf} from './handler.js';
+import {buildCurrentPdfFilePath, landscape, removeWorkDir} from './printeroptions.js';
 
 const mm = 'mm';
 const browserLock = new ReadWriteLock();
@@ -22,11 +24,11 @@ const launchBrowser = async () => browser = await puppeteer.launch({
     args: chromiumArgs
 });
 
-export const lauchChromiumHeadless = async () => {
+export const launchChromiumHeadless = async () => {
     await launchBrowser().then(launchSuccess, launchFailure);
 }
 
-const buildFileUrl = (workDir) => `file://${path.join(workDir, indexHtml)}`;
+const buildFileUrl = (printerOptions) => `file://${path.join(printerOptions.workDir, indexHtml)}`;
 const buildPdfOpts = (printerOptions) => (
     {
         path: buildCurrentPdfFilePath(printerOptions),
@@ -45,10 +47,10 @@ const buildPdfOpts = (printerOptions) => (
 export const viaPuppeteer = async (res, printerOptions) => {
     browserLock.readLock(async (release) => {
         if (!browser.isConnected()) {
-            lauchChromiumHeadless();
+            await launchChromiumHeadless();
         }
         const page = await browser.newPage();
-        await page.goto(buildFileUrl(printerOptions.workDir), {
+        await page.goto(buildFileUrl(printerOptions), {
             waitUntil: defaultEvents
         });
         // page.pdf() is currently supported only in headless mode.
@@ -58,8 +60,6 @@ export const viaPuppeteer = async (res, printerOptions) => {
         sendPdf(res, printerOptions);
         removeWorkDir(printerOptions);
         release();
-        setTimeout(function () {
-            release();
-        }, browserTimeout);
+        setTimeout(() => release(), browserTimeout);
     })
 }
