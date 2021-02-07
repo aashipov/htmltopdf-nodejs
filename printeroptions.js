@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-import {resultPdf} from './handler.js';
+import { resultPdf } from './handler.js';
 
 const leftMarginName = 'left';
 const rightMarginName = 'right';

@@ -1,7 +1,7 @@
-import {spawn} from 'child_process';
+import { spawn } from 'child_process';
 
-import {indexHtml, resultPdf, sendPdf} from './handler.js';
-import {removeWorkDir} from './printeroptions.js';
+import { indexHtml, resultPdf, sendPdf } from './handler.js';
+import { removeWorkDir } from './printeroptions.js';
 
 const buildSpawnOptions = (printerOptions) => (['--enable-local-file-access', '--print-media-type', '--no-stop-slow-scripts', '--disable-smart-shrinking',
     '--margin-bottom', printerOptions.bottom, '--margin-left', printerOptions.left, '--margin-right', printerOptions.right, '--margin-top', printerOptions.top,
@@ -11,7 +11,7 @@ const buildSpawnOptions = (printerOptions) => (['--enable-local-file-access', '-
 const wkhtmltopdf = 'wkhtmltopdf';
 
 export const viaWkhtmltopdf = async (res, printerOptions) => {
-    let osCmd = spawn(wkhtmltopdf, buildSpawnOptions(printerOptions), {cwd: printerOptions.workDir});
+    let osCmd = spawn(wkhtmltopdf, buildSpawnOptions(printerOptions), { cwd: printerOptions.workDir });
     osCmd.on('close', () => {
         sendPdf(res, printerOptions);
         removeWorkDir(printerOptions);

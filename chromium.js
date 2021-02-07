@@ -2,8 +2,8 @@ import puppeteer from 'puppeteer-core';
 import ReadWriteLock from 'rwlock';
 import path from 'path';
 
-import {indexHtml, sendPdf} from './handler.js';
-import {buildCurrentPdfFilePath, landscape, removeWorkDir} from './printeroptions.js';
+import { indexHtml, sendPdf } from './handler.js';
+import { buildCurrentPdfFilePath, landscape, removeWorkDir } from './printeroptions.js';
 
 const mm = 'mm';
 const browserLock = new ReadWriteLock();

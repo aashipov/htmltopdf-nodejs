@@ -2,9 +2,9 @@ import path from 'path';
 import fs from 'fs-extra';
 import Busboy from 'busboy';
 
-import {buildCurrentPdfFilePath, buildPrinterOptions, removeWorkDir} from './printeroptions.js';
-import {viaPuppeteer} from './chromium.js';
-import {viaWkhtmltopdf} from './wkhtmltopdf.js';
+import { buildCurrentPdfFilePath, buildPrinterOptions, removeWorkDir } from './printeroptions.js';
+import { viaPuppeteer } from './chromium.js';
+import { viaWkhtmltopdf } from './wkhtmltopdf.js';
 
 export const html = 'html';
 export const indexHtml = 'index.' + html;
@@ -36,7 +36,7 @@ const teapot = (res, printerOptions) => {
 export const healthCheck = (res) => {
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json;charset=utf-8');
-    res.write(JSON.stringify({"status": "UP"}));
+    res.write(JSON.stringify({ "status": "UP" }));
     res.end();
 };
 
@@ -44,9 +44,9 @@ export const sendPdf = (response, printerOptions) => {
     let currentPdfFile = buildCurrentPdfFilePath(printerOptions);
     response.writeHead(
         200, {
-            'Content-Type': 'application/pdf',
-            'Content-Length': fs.statSync(currentPdfFile).size
-        }
+        'Content-Type': 'application/pdf',
+        'Content-Length': fs.statSync(currentPdfFile).size
+    }
     );
     fs.createReadStream(currentPdfFile).pipe(response);
     // no response.end(); to send PDF properly
