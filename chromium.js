@@ -5,12 +5,23 @@ import path from 'path';
 import { indexHtml, sendPdf } from './handler.js';
 import { buildCurrentPdfFilePath, landscape, removeWorkDir } from './printeroptions.js';
 
+const getChromiumExecutable = () => {
+    const os = process.platform;
+    if ('win32' === os) {
+        return 'chromium.exe';
+    }
+    if ('linux' === os) {
+        return 'chromium';
+    }
+    return 'OS not supported';
+}
+
 const mm = 'mm';
 const browserLock = new ReadWriteLock();
 const browserTimeout = 30000;
-const defaultEvents = ['load', 'domcontentloaded', 'networkidle0', 'networkidle2'];
-// Linux and Linux in container only
-const chromiumPath = '/usr/bin/chromium';
+
+const chromiumEvents = ['load', 'domcontentloaded', 'networkidle0', 'networkidle2'];
+const chromiumExecutable = getChromiumExecutable();
 const chromiumArgs = ['--no-sandbox', '--disable-setuid-sandbox', '--disable-notifications', '--disable-geolocation', '--disable-infobars',
     '--disable-session-crashed-bubble', '--disable-dev-shm-usage', '--disable-gpu', '--disable-translate', '--disable-extensions',
     '--disable-background-networking', '--disable-sync', '--disable-default-apps', '--hide-scrollbars', '--metrics-recording-only',
@@ -20,7 +31,7 @@ let browser;
 const launchSuccess = () => console.log(`Chromium (re)started`);
 const launchFailure = (reason) => console.error(`Chromium failed to (re)start ${reason}`)
 const launchBrowser = async () => browser = await puppeteer.launch({
-    executablePath: chromiumPath,
+    executablePath: chromiumExecutable,
     args: chromiumArgs
 });
 
@@ -51,7 +62,7 @@ export const viaPuppeteer = async (res, printerOptions) => {
         }
         const page = await browser.newPage();
         await page.goto(buildFileUrl(printerOptions), {
-            waitUntil: defaultEvents
+            waitUntil: chromiumEvents
         });
         // page.pdf() is currently supported only in headless mode.
         // @see https://bugs.chromium.org/p/chromium/issues/detail?id=753118

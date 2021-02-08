@@ -4,12 +4,16 @@ https://github.com/aashipov/htmltopdf less performant twin, implemented in ECMAS
 
 ##### Build & run #####
 
-Make sure ```/usr/bin/chromium``` points to Chromium
+Add ```chromium(.exe)``` and ```wkhtmltopdf(.exe)``` to PATH Environment Variable
 
 ```npm install```
 
 ```node server.js```
 
-##### Docker #####
+##### Docker, single instance #####
 
 ```docker pull aashipov/htmltopdf-nodejs:latest && docker run -d --rm --name=htmltopdf-nodejs -p 8080:8080 aashipov/htmltopdf-nodejs:latest```
+
+##### Docker, three instance behind HAProxy #####
+
+```cd test``` ```cd farm``` ```bash farm-refresh```
