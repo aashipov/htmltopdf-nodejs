@@ -13,4 +13,3 @@ COPY --from=builder --chown=dummy:dummy /dummy/ /dummy/
 WORKDIR /dummy/
 USER dummy
 CMD node server.js
-HEALTHCHECK CMD curl -f http://localhost:8080/health || exit 1
