@@ -8,7 +8,7 @@ import { buildCurrentPdfFilePath, landscape, removeWorkDir } from './printeropti
 const getChromiumExecutable = () => {
     const os = process.platform;
     if ('win32' === os) {
-        return 'chromium.exe';
+        return 'chrome.exe';
     }
     if ('linux' === os) {
         return 'chromium';

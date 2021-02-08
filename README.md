@@ -4,7 +4,7 @@ https://github.com/aashipov/htmltopdf less performant twin, implemented in ECMAS
 
 ##### Build & run #####
 
-Add ```chromium(.exe)``` and ```wkhtmltopdf(.exe)``` to PATH Environment Variable
+Add ```chromium``` / ```chrome.exe``` and ```wkhtmltopdf(.exe)``` to PATH Environment Variable
 
 ```npm install```
 
