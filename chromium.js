@@ -18,7 +18,7 @@ const getChromiumExecutable = () => {
 
 const mm = 'mm';
 const browserLock = new ReadWriteLock();
-const browserTimeout = 30000;
+const browserTimeout = 600_000;
 
 const chromiumEvents = ['load', 'domcontentloaded', 'networkidle0', 'networkidle2'];
 const chromiumExecutable = getChromiumExecutable();
