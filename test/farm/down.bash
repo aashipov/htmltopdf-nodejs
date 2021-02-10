@@ -2,7 +2,7 @@
 
 set -x
 
-NODE_NAMES=("htmltopdf-nodejs1" "htmltopdf-nodejs2" "htmltopdf-nodejs3" "htmltopdf-nodejs4" "htmltopdf-nodejs5")
+NODE_NAMES=("htmltopdf-nodejs1" "htmltopdf-nodejs2" "htmltopdf-nodejs3" "htmltopdf-nodejs4" "htmltopdf-nodejs5" "htmltopdf-nodejs6" "htmltopdf-nodejs7")
 
 HAPROXY=htmltopdf-nodejs-haproxy
 NETWORK_NAME=htmltopdf-nodejs
