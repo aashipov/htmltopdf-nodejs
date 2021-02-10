@@ -6,7 +6,7 @@ set -x
 HTML_TO_PDF_IMAGE="aashipov/htmltopdf-nodejs"
 HAPROXY_IMAGE="haproxy"
 THIS_DIR=$(pwd)
-NODE_NAMES=("htmltopdf-nodejs1" "htmltopdf-nodejs2" "htmltopdf-nodejs3")
+NODE_NAMES=("htmltopdf-nodejs1" "htmltopdf-nodejs2" "htmltopdf-nodejs3" "htmltopdf-nodejs4" "htmltopdf-nodejs5")
 HAPROXY=htmltopdf-nodejs-haproxy
 NETWORK_NAME=htmltopdf-nodejs
 VOLUMES_HAPROXY="-v /${THIS_DIR}/haproxy/:/usr/local/etc/haproxy/:ro"
