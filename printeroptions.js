@@ -21,7 +21,7 @@ export class PrinterOptions {
         this.bottom = bottom;
     }
     removeWorkDir() {
-        fs.removeSync(this.workDir);
+        fs.remove(this.workDir);
     }
 }
 
