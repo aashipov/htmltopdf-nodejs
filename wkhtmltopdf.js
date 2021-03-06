@@ -1,7 +1,5 @@
 import { spawn } from 'child_process';
-
 import { indexHtml, resultPdf, sendPdf } from './handler.js';
-import { removeWorkDir } from './printeroptions.js';
 
 const getWkhtmltopdfExecutable = () => {
     const os = process.platform;
@@ -24,14 +22,14 @@ export const viaWkhtmltopdf = async (res, printerOptions) => {
     let osCmd = spawn(wkhtmltopdfExecutable, buildSpawnOptions(printerOptions), { cwd: printerOptions.workDir });
     osCmd.on('close', () => {
         sendPdf(res, printerOptions);
-        removeWorkDir(printerOptions);
+        printerOptions.removeWorkDir();
     });
     osCmd.on('error', (error) => {
         const msg = `Error calling wkhtmltopdf ${error}`;
         console.log(msg);
         res.statusCode = 500;
         res.write(msg);
-        removeWorkDir(printerOptions);
+        printerOptions.removeWorkDir();
         res.end();
     });
 }

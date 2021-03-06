@@ -3,7 +3,7 @@ import ReadWriteLock from 'rwlock';
 import path from 'path';
 
 import { indexHtml, sendPdf } from './handler.js';
-import { buildCurrentPdfFilePath, landscape, removeWorkDir } from './printeroptions.js';
+import { buildCurrentPdfFilePath, landscape } from './printeroptions.js';
 
 const getChromiumExecutable = () => {
     const os = process.platform;
@@ -67,7 +67,7 @@ export const viaPuppeteer = async (res, printerOptions) => {
         await page.pdf(buildPdfOpts(printerOptions));
         await page.close();
         sendPdf(res, printerOptions);
-        removeWorkDir(printerOptions);
+        printerOptions.removeWorkDir();
         release();
         setTimeout(() => release(), browserTimeout);
     })

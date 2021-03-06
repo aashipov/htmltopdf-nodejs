@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import Busboy from 'busboy';
 
-import { buildCurrentPdfFilePath, buildPrinterOptions, removeWorkDir } from './printeroptions.js';
+import { buildCurrentPdfFilePath, buildPrinterOptions } from './printeroptions.js';
 import { viaPuppeteer } from './chromium.js';
 import { viaWkhtmltopdf } from './wkhtmltopdf.js';
 
@@ -29,7 +29,7 @@ const isIndexHtml = (fileNames) => {
 const teapot = (res, printerOptions) => {
     res.statusCode = 418;
     res.write(`No ${indexHtml} or URL does not include words such as ${html} or ${chromium}`);
-    removeWorkDir(printerOptions);
+    printerOptions.removeWorkDir();
     res.end();
 };
 

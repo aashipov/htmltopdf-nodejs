@@ -20,6 +20,9 @@ export class PrinterOptions {
         this.top = top;
         this.bottom = bottom;
     }
+    removeWorkDir() {
+        fs.removeSync(this.workDir);
+    }
 }
 
 class PaperSize {
@@ -55,8 +58,6 @@ const mkdirSync = (dir) => {
 
 const tmpDir = path.join(path.resolve(), 'tmp');
 export const createTmpDir = () => mkdirSync(tmpDir);
-
-export const removeWorkDir = (printerOptions) => fs.remove(printerOptions.workDir);
 export const buildCurrentPdfFilePath = (printerOptions) => path.join(printerOptions.workDir, resultPdf);
 
 export const buildPrinterOptions = (req) => {
