@@ -41,6 +41,7 @@ export const launchChromiumHeadless = async () => {
 const buildFileUrl = (printerOptions) => `file://${path.join(printerOptions.workDir, indexHtml)}`;
 const buildPdfOpts = (printerOptions) => (
     {
+        preferCSSPageSize: false,
         path: buildCurrentPdfFilePath(printerOptions),
         width: printerOptions.paperSize.widthMm + mm,
         height: printerOptions.paperSize.heightMm + mm,
@@ -59,6 +60,7 @@ export const viaPuppeteer = async (res, printerOptions) => {
         await launchChromiumHeadless();
     }
     const page = await browser.newPage();
+    await page.setOfflineMode(true);
     await page.goto(
         buildFileUrl(printerOptions),
         {
