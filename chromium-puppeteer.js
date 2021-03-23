@@ -1,5 +1,4 @@
 import puppeteer from 'puppeteer-core';
-import ReadWriteLock from 'rwlock';
 import path from 'path';
 
 import { indexHtml, sendPdf } from './handler.js';
@@ -17,7 +16,6 @@ const getChromiumExecutable = () => {
 }
 
 const mm = 'mm';
-const browserLock = new ReadWriteLock();
 const browserTimeout = 600_000;
 
 const chromiumEvents = ['load', 'domcontentloaded', 'networkidle0', 'networkidle2'];
@@ -27,7 +25,10 @@ const chromiumArgs = chromiumArgsString.split(' ');
 let browser;
 
 const launchSuccess = () => console.log(`Chromium (re)started`);
-const launchFailure = (reason) => console.error(`Chromium failed to (re)start ${reason}`)
+const launchFailure = (reason) => {
+    console.error(`Chromium failed to (re)start ${reason}`);
+    process.exit(1);
+}
 const launchBrowser = async () => browser = await puppeteer.launch({
     executablePath: chromiumExecutable,
     args: chromiumArgs
@@ -54,21 +55,21 @@ const buildPdfOpts = (printerOptions) => (
 );
 
 export const viaPuppeteer = async (res, printerOptions) => {
-    browserLock.readLock(async (release) => {
-        if (!browser.isConnected()) {
-            await launchChromiumHeadless();
+    if (!browser.isConnected()) {
+        await launchChromiumHeadless();
+    }
+    const page = await browser.newPage();
+    await page.goto(
+        buildFileUrl(printerOptions),
+        {
+            waitUntil: chromiumEvents, 
+            timeout: browserTimeout
         }
-        const page = await browser.newPage();
-        await page.goto(buildFileUrl(printerOptions), {
-            waitUntil: chromiumEvents
-        });
-        // page.pdf() is currently supported only in headless mode.
-        // @see https://bugs.chromium.org/p/chromium/issues/detail?id=753118
-        await page.pdf(buildPdfOpts(printerOptions));
-        await page.close();
-        sendPdf(res, printerOptions);
-        printerOptions.removeWorkDir();
-        release();
-        setTimeout(() => release(), browserTimeout);
-    })
+    );
+    // page.pdf() is currently supported only in headless mode.
+    // @see https://bugs.chromium.org/p/chromium/issues/detail?id=753118
+    await page.pdf(buildPdfOpts(printerOptions));
+    await page.close();
+    sendPdf(res, printerOptions);
+    printerOptions.removeWorkDir();
 }

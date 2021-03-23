@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import Busboy from 'busboy';
 
 import { buildCurrentPdfFilePath, buildPrinterOptions } from './printeroptions.js';
-import { viaPuppeteer } from './chromium.js';
+import { viaPuppeteer } from './chromium-puppeteer.js';
 import { viaWkhtmltopdf } from './wkhtmltopdf.js';
 
 export const html = 'html';

@@ -1,17 +1,8 @@
-import { spawn } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
 import { indexHtml, resultPdf, sendPdf } from './handler.js';
 
-const getWkhtmltopdfExecutable = () => {
-    const os = process.platform;
-    if ('win32' === os) {
-        return 'wkhtmltopdf.exe';
-    }
-    if ('linux' === os) {
-        return 'wkhtmltopdf';
-    }
-    return 'OS not supported';
-}
-const wkhtmltopdfExecutable = getWkhtmltopdfExecutable();
+const wkhtmltopdfExecutable = 'wkhtmltopdf';
+const timeout = 600_000;
 
 const buildSpawnOptions = (printerOptions) => (['--enable-local-file-access', '--print-media-type', '--no-stop-slow-scripts', '--disable-smart-shrinking',
     '--margin-bottom', printerOptions.bottom, '--margin-left', printerOptions.left, '--margin-right', printerOptions.right, '--margin-top', printerOptions.top,
@@ -19,17 +10,16 @@ const buildSpawnOptions = (printerOptions) => (['--enable-local-file-access', '-
     indexHtml, resultPdf]);
 
 export const viaWkhtmltopdf = async (res, printerOptions) => {
-    let osCmd = spawn(wkhtmltopdfExecutable, buildSpawnOptions(printerOptions), { cwd: printerOptions.workDir });
-    osCmd.on('close', () => {
+    let spawnSyncReturns = spawnSync(wkhtmltopdfExecutable, buildSpawnOptions(printerOptions), { cwd: printerOptions.workDir});
+    if (spawnSyncReturns.status === 0) {
         sendPdf(res, printerOptions);
         printerOptions.removeWorkDir();
-    });
-    osCmd.on('error', (error) => {
+    } else {
         const msg = `Error calling wkhtmltopdf ${error}`;
         console.log(msg);
         res.statusCode = 500;
         res.write(msg);
         printerOptions.removeWorkDir();
         res.end();
-    });
+    }
 }

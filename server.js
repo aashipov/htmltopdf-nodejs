@@ -2,7 +2,7 @@ import http from 'http';
 
 import { chromium, healthCheck, html, htmlToPdf } from './handler.js';
 import { createTmpDir } from './printeroptions.js';
-import { launchChromiumHeadless } from './chromium.js';
+import { launchChromiumHeadless } from './chromium-puppeteer.js';
 
 const defaultPort = 8080;
 
