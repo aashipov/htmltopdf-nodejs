@@ -1,4 +1,4 @@
-import { spawn, spawnSync } from 'child_process';
+import { spawnSync } from 'child_process';
 import { indexHtml, resultPdf, sendPdf } from './handler.js';
 
 const wkhtmltopdfExecutable = 'wkhtmltopdf';

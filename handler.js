@@ -20,9 +20,9 @@ const isIndexHtml = (fileNames) => {
     return false;
 };
 
-const teapot = (res, printerOptions) => {
-    res.statusCode = 418;
-    res.write(`No ${indexHtml} or URL does not include words such as ${html} or ${chromium} or anything else`);
+const internalServerError = (res, printerOptions, err) => {
+    res.statusCode = 500;
+    res.write(err.message);
     printerOptions.removeWorkDir();
     res.end();
 };
@@ -65,14 +65,18 @@ export const htmlToPdf = async (req, res) => {
                         viaWkhtmltopdf(res, printerOptions);
                     }
                 } else {
-                    teapot(res, printerOptions);
+                    throw new Error(`No ${indexHtml}`);
                 }
             }
         ).on('error',
             () => {
-                teapot(res, printerOptions);
+                throw new Error(`Can not parse multipart`);
             })
 
         ;
-    formidable.parse(req);
+        try {
+            formidable.parse(req);
+        } catch(err) {
+            internalServerError(res, printerOptions, err);
+        }
 };
