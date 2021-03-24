@@ -3,7 +3,7 @@ USER root
 WORKDIR /dummy/
 COPY --chown=dummy:dummy ./ ./
 USER dummy
-RUN npm install --production ; npm prune --production ; node-prune
+RUN npm install --production && npm prune --production && node-prune
 
 FROM aashipov/htmltopdf:base
 USER root
