@@ -49,38 +49,29 @@ export const sendPdf = (response, printerOptions) => {
 export const htmlToPdf = async (req, res) => {
     const printerOptions = buildPrinterOptions(req);
     const formidable = new Formidable({ multiples: true, uploadDir: printerOptions.workDir });
-    formidable
-        .on('file',
-            (fieldName, currentFile) => {
-                printerOptions.fileNames.push(currentFile.name);
-                try {
+    try {
+        formidable
+            .on('file',
+                (fieldName, currentFile) => {
+                    printerOptions.fileNames.push(currentFile.name);
                     fs.renameSync(currentFile.path, path.join(printerOptions.workDir, currentFile.name));
-                } catch (err) {
-                    internalServerError(res, printerOptions, err);
                 }
-            }
-        )
-        .on('end',
-            () => {
-                if (isIndexHtml(printerOptions.fileNames)) {
-                    try {
+            )
+            .on('end',
+                () => {
+                    if (isIndexHtml(printerOptions.fileNames)) {
                         if (printerOptions.originalUrl.includes(chromium)) {
                             viaPuppeteer(res, printerOptions);
                         } else if (printerOptions.originalUrl.includes(html)) {
                             viaWkhtmltopdf(res, printerOptions);
                         }
-                    } catch (err) {
-                        internalServerError(res, printerOptions, err.message);
+                    } else {
+                        throw new Error(`No ${indexHtml}`);
                     }
-                } else {
-                    internalServerError(res, printerOptions, `No ${indexHtml}`);
                 }
-            }
-        ).on('error',
-            (err) => {
-                internalServerError(res, printerOptions, err.message);
-            })
-
-        ;
-    formidable.parse(req);
+            );
+        formidable.parse(req);
+    } catch (err) {
+        internalServerError(res, printerOptions, err.message);
+    }
 };
