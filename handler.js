@@ -20,9 +20,9 @@ const isIndexHtml = (fileNames) => {
     return false;
 };
 
-const internalServerError = (res, printerOptions, err) => {
+const internalServerError = (res, printerOptions, reason) => {
     res.statusCode = 500;
-    res.write(err.message);
+    res.write(reason);
     printerOptions.removeWorkDir();
     res.end();
 };
@@ -53,24 +53,32 @@ export const htmlToPdf = async (req, res) => {
         .on('file',
             (fieldName, currentFile) => {
                 printerOptions.fileNames.push(currentFile.name);
-                fs.renameSync(currentFile.path, path.join(printerOptions.workDir, currentFile.name));
+                try {
+                    fs.renameSync(currentFile.path, path.join(printerOptions.workDir, currentFile.name));
+                } catch (err) {
+                    internalServerError(res, printerOptions, err);
+                }
             }
         )
         .on('end',
             () => {
                 if (isIndexHtml(printerOptions.fileNames)) {
-                    if (printerOptions.originalUrl.includes(chromium)) {
-                        viaPuppeteer(res, printerOptions);
-                    } else if (printerOptions.originalUrl.includes(html)) {
-                        viaWkhtmltopdf(res, printerOptions);
+                    try {
+                        if (printerOptions.originalUrl.includes(chromium)) {
+                            viaPuppeteer(res, printerOptions);
+                        } else if (printerOptions.originalUrl.includes(html)) {
+                            viaWkhtmltopdf(res, printerOptions);
+                        }
+                    } catch (err) {
+                        internalServerError(res, printerOptions, err.message);
                     }
                 } else {
-                    throw new Error(`No ${indexHtml}`);
+                    internalServerError(res, printerOptions, `No ${indexHtml}`);
                 }
             }
         ).on('error',
             (err) => {
-                internalServerError(res, printerOptions, err);
+                internalServerError(res, printerOptions, err.message);
             })
 
         ;
