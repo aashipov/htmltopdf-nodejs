@@ -56,8 +56,8 @@ export const htmlToPdf = async (req, res) => {
                     printerOptions.fileNames.push(currentFile.name);
                     try {
                         fs.renameSync(currentFile.path, path.join(printerOptions.workDir, currentFile.name));
-                    } catch (error) {
-                        throw new Error(error.message)
+                    } catch (err) {
+                        internalServerError(res, printerOptions, err.message);
                     }
                 }
             )
@@ -70,16 +70,16 @@ export const htmlToPdf = async (req, res) => {
                             } else if (printerOptions.originalUrl.includes(html)) {
                                 viaWkhtmltopdf(res, printerOptions);
                             }
-                        } catch (error) {
-                            throw new Error(error.message)
+                        } catch (err) {
+                            internalServerError(res, printerOptions, err.message);
                         }
                     } else {
-                        throw new Error(`No ${indexHtml}`);
+                        internalServerError(res, printerOptions, `No ${indexHtml}`);
                     }
                 }
             ).on('error',
-                (error) => {
-                    throw new Error(error.message)
+                (err) => {
+                    internalServerError(res, printerOptions, err.message);
                 }
             );
         formidable.parse(req);
