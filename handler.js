@@ -69,14 +69,10 @@ export const htmlToPdf = async (req, res) => {
                 }
             }
         ).on('error',
-            () => {
-                throw new Error(`Can not parse multipart`);
+            (err) => {
+                internalServerError(res, printerOptions, err);
             })
 
         ;
-        try {
-            formidable.parse(req);
-        } catch(err) {
-            internalServerError(res, printerOptions, err);
-        }
+    formidable.parse(req);
 };
