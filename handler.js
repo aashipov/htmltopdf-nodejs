@@ -1,21 +1,15 @@
 import path from 'path';
 import fs from 'fs-extra';
-import Busboy from 'busboy';
 
 import { buildCurrentPdfFilePath, buildPrinterOptions } from './printeroptions.js';
 import { viaPuppeteer } from './chromium-puppeteer.js';
 import { viaWkhtmltopdf } from './wkhtmltopdf.js';
+import Formidable from 'formidable';
 
 export const html = 'html';
 export const indexHtml = 'index.' + html;
 export const resultPdf = 'result.pdf';
 export const chromium = 'chromium';
-
-const receiveFiles = (file, filename, printerOptions) => {
-    printerOptions.fileNames.push(filename);
-    let fstream = fs.createWriteStream(path.join(printerOptions.workDir, filename));
-    file.pipe(fstream);
-};
 
 const isIndexHtml = (fileNames) => {
     for (let i = 0; i < fileNames.length; i++) {
@@ -28,7 +22,7 @@ const isIndexHtml = (fileNames) => {
 
 const teapot = (res, printerOptions) => {
     res.statusCode = 418;
-    res.write(`No ${indexHtml} or URL does not include words such as ${html} or ${chromium}`);
+    res.write(`No ${indexHtml} or URL does not include words such as ${html} or ${chromium} or anything else`);
     printerOptions.removeWorkDir();
     res.end();
 };
@@ -41,7 +35,7 @@ export const healthCheck = (res) => {
 };
 
 export const sendPdf = (response, printerOptions) => {
-    let currentPdfFile = buildCurrentPdfFilePath(printerOptions);
+    const currentPdfFile = buildCurrentPdfFilePath(printerOptions);
     response.writeHead(
         200, {
         'Content-Type': 'application/pdf',
@@ -53,22 +47,32 @@ export const sendPdf = (response, printerOptions) => {
 };
 
 export const htmlToPdf = async (req, res) => {
-    let printerOptions = buildPrinterOptions(req);
-    let busboy = new Busboy({
-        headers: req.headers
-    });
-    req.pipe(busboy);
-    busboy
-        .on('file', (fieldname, file, filename) => receiveFiles(file, filename, printerOptions))
-        .on('finish', () => {
-            if (isIndexHtml(printerOptions.fileNames)) {
-                if (printerOptions.originalUrl.includes(chromium)) {
-                    viaPuppeteer(res, printerOptions);
-                } else if (printerOptions.originalUrl.includes(html)) {
-                    viaWkhtmltopdf(res, printerOptions);
-                }
-            } else {
-                teapot(res, printerOptions);
+    const printerOptions = buildPrinterOptions(req);
+    const formidable = new Formidable({ multiples: true, uploadDir: printerOptions.workDir });
+    formidable
+        .on('file',
+            (fieldName, currentFile) => {
+                printerOptions.fileNames.push(currentFile.name);
+                fs.renameSync(currentFile.path, path.join(printerOptions.workDir, currentFile.name));
             }
-        });
+        )
+        .on('end',
+            () => {
+                if (isIndexHtml(printerOptions.fileNames)) {
+                    if (printerOptions.originalUrl.includes(chromium)) {
+                        viaPuppeteer(res, printerOptions);
+                    } else if (printerOptions.originalUrl.includes(html)) {
+                        viaWkhtmltopdf(res, printerOptions);
+                    }
+                } else {
+                    teapot(res, printerOptions);
+                }
+            }
+        ).on('error',
+            () => {
+                teapot(res, printerOptions);
+            })
+
+        ;
+    formidable.parse(req);
 };

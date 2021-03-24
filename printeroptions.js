@@ -63,7 +63,7 @@ export const buildCurrentPdfFilePath = (printerOptions) => path.join(printerOpti
 export const buildPrinterOptions = (req) => {
     const workDir = path.join(tmpDir, '' + Math.random() + '-' + Math.random());
     mkdirSync(workDir);
-    let printerOptions =
+    const printerOptions =
         new PrinterOptions(
             workDir,
             [],
