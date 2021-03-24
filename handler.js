@@ -54,20 +54,32 @@ export const htmlToPdf = async (req, res) => {
             .on('file',
                 (fieldName, currentFile) => {
                     printerOptions.fileNames.push(currentFile.name);
-                    fs.renameSync(currentFile.path, path.join(printerOptions.workDir, currentFile.name));
+                    try {
+                        fs.renameSync(currentFile.path, path.join(printerOptions.workDir, currentFile.name));
+                    } catch (error) {
+                        throw new Error(error.message)
+                    }
                 }
             )
             .on('end',
                 () => {
                     if (isIndexHtml(printerOptions.fileNames)) {
-                        if (printerOptions.originalUrl.includes(chromium)) {
-                            viaPuppeteer(res, printerOptions);
-                        } else if (printerOptions.originalUrl.includes(html)) {
-                            viaWkhtmltopdf(res, printerOptions);
+                        try {
+                            if (printerOptions.originalUrl.includes(chromium)) {
+                                viaPuppeteer(res, printerOptions);
+                            } else if (printerOptions.originalUrl.includes(html)) {
+                                viaWkhtmltopdf(res, printerOptions);
+                            }
+                        } catch (error) {
+                            throw new Error(error.message)
                         }
                     } else {
                         throw new Error(`No ${indexHtml}`);
                     }
+                }
+            ).on('error',
+                (error) => {
+                    throw new Error(error.message)
                 }
             );
         formidable.parse(req);
