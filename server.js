@@ -9,7 +9,7 @@ const defaultPort = 8080;
 http.createServer((request, response) => {
     const { url } = request;
     if (url.includes(chromium) || url.includes(html)) {
-        htmlToPdf(request, response).catch((reason) => console.log(reason));
+        htmlToPdf(request, response);
     } else {
         healthCheck(response);
     }

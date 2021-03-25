@@ -21,9 +21,10 @@ const isIndexHtml = (fileNames) => {
 };
 
 const internalServerError = (res, printerOptions, reason) => {
-    res.statusCode = 500;
-    res.write(reason);
     printerOptions.removeWorkDir();
+    res.statusCode = 500;
+    console.log(reason);
+    //res.write(reason);
     res.end();
 };
 
