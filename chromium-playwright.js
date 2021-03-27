@@ -31,7 +31,6 @@ const launchBrowser = async () =>
     browser = await chromium.launch({
         args: chromiumArgs,
         chromiumSandbox: false,
-        offline: true,
         executablePath: chromiumExecutable
     });
 
