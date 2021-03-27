@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 
 import { buildCurrentPdfFilePath, buildPrinterOptions } from './printeroptions.js';
-import { viaPuppeteer } from './chromium-puppeteer.js';
+import {viaPlaywright} from './chromium-playwright.js';
 import { viaWkhtmltopdf } from './wkhtmltopdf.js';
 import Formidable from 'formidable';
 
@@ -67,7 +67,7 @@ export const htmlToPdf = async (req, res) => {
                     if (isIndexHtml(printerOptions.fileNames)) {
                         try {
                             if (printerOptions.originalUrl.includes(chromium)) {
-                                viaPuppeteer(res, printerOptions);
+                                viaPlaywright(res, printerOptions);
                             } else if (printerOptions.originalUrl.includes(html)) {
                                 viaWkhtmltopdf(res, printerOptions);
                             }

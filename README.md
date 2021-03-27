@@ -12,4 +12,4 @@ Add ```chromium``` / ```chrome.exe``` and ```wkhtmltopdf(.exe)``` to PATH Enviro
 
 ##### Docker, single instance #####
 
-```docker pull aashipov/htmltopdf-nodejs:latest && docker run -d --rm --name=htmltopdf-nodejs -p 8080:8080 aashipov/htmltopdf-nodejs:latest```
+```docker pull aashipov/htmltopdf-nodejs:pw && docker run -d --rm --name=htmltopdf-nodejs -p 8080:8080 aashipov/htmltopdf-nodejs:pw```
